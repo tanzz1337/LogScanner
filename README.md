@@ -77,7 +77,7 @@ Menampilkan ringkasan setelah file diupload:
 
 ### 1. Buka File
 ```
-Cukup buka file log-analyzer.html di browser manapun
+Cukup buka file index.html di browser manapun
 (Chrome, Firefox, Edge, Safari)
 ```
 
