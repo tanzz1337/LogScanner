@@ -1,3 +1,6 @@
+<img width="1410" height="664" alt="image" src="https://github.com/user-attachments/assets/7fac136c-8551-4259-be71-b47b74abafc8" />
+
+
 # 🔍 LogScan — Web Server Log Analyzer
 
 ![Version](https://img.shields.io/badge/version-1.0.0-00f5a0?style=flat-square)
