@@ -1,3 +1,7 @@
+<!--
+AI for Cyber Security
+~ Tanzz1337
+-->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -6,493 +10,264 @@
 <title>LogScan — Request Analyzer</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0c10;
-    --surface: #10141c;
-    --surface2: #161b26;
-    --border: #1e2635;
-    --accent: #00f5a0;
-    --accent2: #00d4ff;
-    --danger: #ff4757;
-    --warn: #ffa502;
-    --info: #5352ed;
-    --text: #e2e8f0;
-    --muted: #4a5568;
-    --muted2: #718096;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,245,160,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,245,160,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px; }
-
-  /* Header */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-
-  .logo h1 {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-  }
-
-  .logo span { color: var(--accent); }
-
-  .badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    background: rgba(0,245,160,0.1);
-    color: var(--accent);
-    border: 1px solid rgba(0,245,160,0.2);
-  }
-
-  /* Upload zone */
-  .upload-zone {
-    border: 2px dashed var(--border);
-    border-radius: 16px;
-    padding: 48px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: var(--surface);
-    margin-bottom: 24px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .upload-zone::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at center, rgba(0,245,160,0.05) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .upload-zone:hover, .upload-zone.dragover {
-    border-color: var(--accent);
-    background: var(--surface2);
-  }
-
-  .upload-zone:hover::before, .upload-zone.dragover::before { opacity: 1; }
-
-  .upload-icon { font-size: 48px; margin-bottom: 16px; }
-
-  .upload-zone h2 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-
-  .upload-zone p {
-    color: var(--muted2);
-    font-size: 14px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .upload-zone input { display: none; }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #000;
-    margin-top: 16px;
-  }
-
-  .btn-primary:hover { background: #00e090; transform: translateY(-1px); }
-
-  /* Stats bar */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    transition: border-color 0.2s;
-  }
-
-  .stat-card:hover { border-color: var(--muted); }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--muted2);
-    font-family: 'JetBrains Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .stat-value {
-    font-size: 28px;
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  .stat-value.green { color: var(--accent); }
-  .stat-value.blue { color: var(--accent2); }
-  .stat-value.red { color: var(--danger); }
-  .stat-value.yellow { color: var(--warn); }
-
-  /* Filters */
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-    align-items: center;
-  }
-
-  .filter-group {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .filter-btn {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    padding: 6px 14px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--muted2);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .filter-btn:hover { border-color: var(--muted); color: var(--text); }
-  .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
-  .filter-btn.danger.active { background: var(--danger); border-color: var(--danger); color: #fff; }
-  .filter-btn.warn.active { background: var(--warn); border-color: var(--warn); color: #000; }
-
-  .search-box {
-    flex: 1;
-    min-width: 200px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 14px;
-    transition: border-color 0.2s;
-  }
-
-  .search-box:focus-within { border-color: var(--accent); }
-
-  .search-box input {
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    width: 100%;
-  }
-
-  .search-box input::placeholder { color: var(--muted); }
-
-  /* Log entries */
-  .log-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .log-entry {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: all 0.2s;
-    animation: slideIn 0.3s ease both;
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .log-entry:hover { border-color: var(--muted); }
-  .log-entry.threat-critical { border-left: 3px solid var(--danger); }
-  .log-entry.threat-medium { border-left: 3px solid var(--warn); }
-  .log-entry.threat-low { border-left: 3px solid var(--info); }
-
-  .log-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 18px;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .method-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 5px;
-    letter-spacing: 0.5px;
-    flex-shrink: 0;
-  }
-
-  .method-GET { background: rgba(0,245,160,0.15); color: var(--accent); }
-  .method-POST { background: rgba(0,212,255,0.15); color: var(--accent2); }
-  .method-PUT { background: rgba(255,165,2,0.15); color: var(--warn); }
-  .method-DELETE { background: rgba(255,71,87,0.15); color: var(--danger); }
-  .method-PATCH { background: rgba(83,82,237,0.15); color: #a29bfe; }
-
-  .status-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 5px;
-    flex-shrink: 0;
-  }
-
-  .status-2xx { background: rgba(0,245,160,0.1); color: var(--accent); }
-  .status-3xx { background: rgba(0,212,255,0.1); color: var(--accent2); }
-  .status-4xx { background: rgba(255,165,2,0.1); color: var(--warn); }
-  .status-5xx { background: rgba(255,71,87,0.1); color: var(--danger); }
-
-  .log-url {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .log-time {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted2);
-    flex-shrink: 0;
-  }
-
-  .log-ip {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted2);
-    flex-shrink: 0;
-  }
-
-  .threat-tags {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
-
-  .threat-tag {
-    font-size: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-weight: 600;
-  }
-
-  .threat-critical-tag { background: rgba(255,71,87,0.2); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); }
-  .threat-medium-tag { background: rgba(255,165,2,0.2); color: var(--warn); border: 1px solid rgba(255,165,2,0.3); }
-  .threat-low-tag { background: rgba(83,82,237,0.2); color: #a29bfe; border: 1px solid rgba(83,82,237,0.3); }
-
-  .expand-icon {
-    color: var(--muted);
-    font-size: 12px;
-    transition: transform 0.2s;
-    flex-shrink: 0;
-  }
-
-  .log-entry.expanded .expand-icon { transform: rotate(180deg); }
-
-  /* Detail panel */
-  .log-detail {
-    display: none;
-    padding: 0 18px 18px;
-    border-top: 1px solid var(--border);
-  }
-
-  .log-entry.expanded .log-detail { display: block; }
-
-  .detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
-    margin-top: 14px;
-  }
-
-  .detail-section h4 {
-    font-size: 11px;
-    color: var(--muted2);
-    font-family: 'JetBrains Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-  }
-
-  .detail-rows { display: flex; flex-direction: column; gap: 4px; }
-
-  .detail-row {
-    display: flex;
-    gap: 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-  }
-
-  .detail-key { color: var(--muted2); min-width: 90px; flex-shrink: 0; }
-  .detail-val { color: var(--text); word-break: break-all; }
-  .detail-val.highlight { color: var(--accent); }
-
-  /* Headers block */
-  .headers-block {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    line-height: 1.8;
-    max-height: 200px;
-    overflow-y: auto;
-    margin-top: 8px;
-  }
-
-  .header-key { color: var(--accent2); }
-  .header-val { color: var(--muted2); }
-
-  /* Threat detail */
-  .threat-detail {
-    background: rgba(255,71,87,0.05);
-    border: 1px solid rgba(255,71,87,0.2);
-    border-radius: 8px;
-    padding: 12px;
-    margin-top: 14px;
-  }
-
-  .threat-detail h4 {
-    color: var(--danger);
-    font-size: 12px;
-    margin-bottom: 8px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .threat-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255,71,87,0.1);
-  }
-
-  .threat-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-
-  .threat-name { font-size: 12px; font-weight: 600; color: var(--danger); font-family: 'JetBrains Mono', monospace; }
-  .threat-desc { font-size: 11px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; }
-  .threat-matched { font-size: 11px; color: var(--warn); font-family: 'JetBrains Mono', monospace; }
-
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    padding: 80px 20px;
-    color: var(--muted2);
-  }
-
-  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
-  .empty-state p { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
-
-  /* Count info */
-  .result-info {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--muted2);
-    margin-bottom: 12px;
-  }
-
-  .result-info span { color: var(--accent); }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* Separator */
-  .sep { color: var(--muted); margin: 0 4px; }
-
-  @media (max-width: 600px) {
-    .log-ip, .log-time { display: none; }
-    .stats-bar { grid-template-columns: repeat(2, 1fr); }
-  }
+:root {
+  --bg: #0a0c10;
+  --surface: #10141c;
+  --surface2: #161b26;
+  --border: #1e2635;
+  --accent: #00f5a0;
+  --accent2: #00d4ff;
+  --danger: #ff4757;
+  --warn: #ffa502;
+  --info: #5352ed;
+  --text: #e2e8f0;
+  --muted: #4a5568;
+  --muted2: #718096;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,245,160,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,160,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.logo h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.logo span { color: var(--accent); }
+.badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(0,245,160,0.1); color: var(--accent); border: 1px solid rgba(0,245,160,0.2);
+}
+
+/* ── FIX 1: Upload zone — label wraps everything, input is hidden properly ── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 16px; padding: 48px; text-align: center;
+  cursor: pointer; transition: all 0.3s ease;
+  background: var(--surface); margin-bottom: 24px;
+  position: relative; overflow: hidden;
+}
+.upload-zone::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0,245,160,0.05) 0%, transparent 70%);
+  opacity: 0; transition: opacity 0.3s;
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--surface2); }
+.upload-zone:hover::before, .upload-zone.dragover::before { opacity: 1; }
+.upload-icon { font-size: 48px; margin-bottom: 16px; }
+.upload-zone h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.upload-zone p { color: var(--muted2); font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+
+/* Hidden file input — takes up no space but is accessible via JS click() */
+#fileInput { display: none; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 8px;
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.2s;
+}
+.btn-primary { background: var(--accent); color: #000; margin-top: 16px; }
+.btn-primary:hover { background: #00e090; transform: translateY(-1px); }
+
+/* Progress bar for large files */
+.progress-wrap {
+  display: none;
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.progress-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--muted2); margin-bottom: 8px;
+}
+.progress-bar-track {
+  background: var(--border); border-radius: 4px; height: 6px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 4px; transition: width 0.2s ease;
+}
+
+/* Error toast */
+.error-toast {
+  display: none;
+  background: rgba(255,71,87,0.1);
+  border: 1px solid rgba(255,71,87,0.3);
+  border-radius: 10px; padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: var(--danger);
+  margin-bottom: 16px;
+}
+
+.stats-bar {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px; margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 4px; transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--muted); }
+.stat-label { font-size: 11px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
+.stat-value.green { color: var(--accent); }
+.stat-value.blue { color: var(--accent2); }
+.stat-value.red { color: var(--danger); }
+.stat-value.yellow { color: var(--warn); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
+.filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted2); cursor: pointer; transition: all 0.2s;
+}
+.filter-btn:hover { border-color: var(--muted); color: var(--text); }
+.filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+.filter-btn.danger.active { background: var(--danger); border-color: var(--danger); color: #fff; }
+.filter-btn.warn.active { background: var(--warn); border-color: var(--warn); color: #000; }
+.search-box {
+  flex: 1; min-width: 200px; display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 14px; transition: border-color 0.2s;
+}
+.search-box:focus-within { border-color: var(--accent); }
+.search-box input {
+  background: none; border: none; outline: none; color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; width: 100%;
+}
+.search-box input::placeholder { color: var(--muted); }
+
+.log-container { display: flex; flex-direction: column; gap: 8px; }
+.log-entry {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; transition: all 0.2s;
+  animation: slideIn 0.3s ease both;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.log-entry:hover { border-color: var(--muted); }
+.log-entry.threat-critical { border-left: 3px solid var(--danger); }
+.log-entry.threat-medium   { border-left: 3px solid var(--warn); }
+.log-entry.threat-low      { border-left: 3px solid var(--info); }
+
+.log-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; cursor: pointer; user-select: none;
+}
+.method-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 5px; letter-spacing: 0.5px; flex-shrink: 0;
+}
+.method-GET    { background: rgba(0,245,160,0.15); color: var(--accent); }
+.method-POST   { background: rgba(0,212,255,0.15); color: var(--accent2); }
+.method-PUT    { background: rgba(255,165,2,0.15);  color: var(--warn); }
+.method-DELETE { background: rgba(255,71,87,0.15);  color: var(--danger); }
+.method-PATCH  { background: rgba(83,82,237,0.15);  color: #a29bfe; }
+.status-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 5px; flex-shrink: 0;
+}
+.status-2xx { background: rgba(0,245,160,0.1);  color: var(--accent); }
+.status-3xx { background: rgba(0,212,255,0.1);  color: var(--accent2); }
+.status-4xx { background: rgba(255,165,2,0.1);  color: var(--warn); }
+.status-5xx { background: rgba(255,71,87,0.1);  color: var(--danger); }
+
+.log-url {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.log-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted2); flex-shrink: 0; }
+.log-ip   { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted2); flex-shrink: 0; }
+.threat-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.threat-tag { font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.threat-critical-tag { background: rgba(255,71,87,0.2); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); }
+.threat-medium-tag   { background: rgba(255,165,2,0.2);  color: var(--warn);   border: 1px solid rgba(255,165,2,0.3); }
+.threat-low-tag      { background: rgba(83,82,237,0.2);  color: #a29bfe;       border: 1px solid rgba(83,82,237,0.3); }
+.expand-icon { color: var(--muted); font-size: 12px; transition: transform 0.2s; flex-shrink: 0; }
+.log-entry.expanded .expand-icon { transform: rotate(180deg); }
+
+.log-detail { display: none; padding: 0 18px 18px; border-top: 1px solid var(--border); }
+.log-entry.expanded .log-detail { display: block; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 14px; }
+.detail-section h4 { font-size: 11px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.detail-rows { display: flex; flex-direction: column; gap: 4px; }
+.detail-row { display: flex; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.detail-key { color: var(--muted2); min-width: 90px; flex-shrink: 0; }
+.detail-val { color: var(--text); word-break: break-all; }
+.detail-val.highlight { color: var(--accent); }
+
+.headers-block {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  line-height: 1.8; max-height: 200px; overflow-y: auto; margin-top: 8px;
+}
+.header-key { color: var(--accent2); }
+.header-val { color: var(--muted2); }
+
+.threat-detail {
+  background: rgba(255,71,87,0.05); border: 1px solid rgba(255,71,87,0.2);
+  border-radius: 8px; padding: 12px; margin-top: 14px;
+}
+.threat-detail h4 { color: var(--danger); font-size: 12px; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+.threat-item { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,71,87,0.1); }
+.threat-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.threat-name    { font-size: 12px; font-weight: 600; color: var(--danger); font-family: 'JetBrains Mono', monospace; }
+.threat-desc    { font-size: 11px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; }
+.threat-matched { font-size: 11px; color: var(--warn); font-family: 'JetBrains Mono', monospace; }
+
+.empty-state { text-align: center; padding: 80px 20px; color: var(--muted2); }
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+.result-info { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted2); margin-bottom: 12px; }
+.result-info span { color: var(--accent); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.sep { color: var(--muted); margin: 0 4px; }
+
+@media (max-width: 600px) {
+  .log-ip, .log-time { display: none; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
 <div class="container">
+
   <!-- Header -->
   <header>
     <div class="logo">
@@ -505,18 +280,35 @@
     </div>
   </header>
 
-  <!-- Upload Zone -->
+  <!-- ── FIX 1: Upload Zone ─────────────────────────────────────────────────
+       Perubahan dari versi lama:
+       - <label for="fileInput"> dihapus (menyebabkan konflik click)
+       - input#fileInput TIDAK lagi dibungkus label dan TIDAK ada pointer-events:none
+       - Upload dipicu via JS: uploadZone.onclick → fileInput.click()
+       - Tombol .btn-primary menggunakan onclick="triggerUpload()" langsung
+  ──────────────────────────────────────────────────────────────────────── -->
   <div class="upload-zone" id="uploadZone">
-    <label for="fileInput" style="display:block;cursor:pointer">
-      <div class="upload-icon">📂</div>
-      <h2>Upload File Log</h2>
-      <p>Mendukung: <b>Apache Access</b> · <b>Apache Error</b> · <b>Nginx Access</b> · <b>Nginx Error</b> · <b>Custom Format</b></p>
-      <p style="margin-top:6px">Klik area ini atau tombol di bawah untuk memilih file</p>
-      <span class="btn btn-primary" style="margin-top:16px;display:inline-flex">
-        📁 Pilih File .log
-      </span>
-    </label>
-    <input type="file" id="fileInput" accept=".log,.txt" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+    <div class="upload-icon">📂</div>
+    <h2>Upload File Log</h2>
+    <p>Mendukung: <b>Apache Access</b> · <b>Apache Error</b> · <b>Nginx Access</b> · <b>Nginx Error</b> · <b>Custom Format</b></p>
+    <p style="margin-top:6px">Klik area ini, drag &amp; drop, atau tombol di bawah</p>
+    <!-- FIX: Max size info -->
+    <p style="margin-top:4px;color:var(--accent);font-size:12px">📦 Maks. ukuran file: <b>100 MB</b></p>
+    <button class="btn btn-primary" onclick="triggerUpload()">📁 Pilih File .log</button>
+  </div>
+
+  <!-- Hidden file input — dikontrol via JS saja, tidak dibungkus label -->
+  <input type="file" id="fileInput" accept=".log,.txt">
+
+  <!-- Error toast -->
+  <div class="error-toast" id="errorToast"></div>
+
+  <!-- FIX 2: Progress bar untuk file besar -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label" id="progressLabel">Memuat file... 0%</div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
   </div>
 
   <!-- Stats -->
@@ -550,22 +342,22 @@
   <!-- Filters -->
   <div class="filters" id="filtersBar" style="display:none">
     <div class="filter-group" id="methodFilters">
-      <button class="filter-btn active" data-filter="method" data-value="ALL" onclick="setFilter('method','ALL',this)">ALL</button>
-      <button class="filter-btn" data-filter="method" data-value="GET" onclick="setFilter('method','GET',this)">GET</button>
-      <button class="filter-btn" data-filter="method" data-value="POST" onclick="setFilter('method','POST',this)">POST</button>
-      <button class="filter-btn" data-filter="method" data-value="PUT" onclick="setFilter('method','PUT',this)">PUT</button>
-      <button class="filter-btn" data-filter="method" data-value="DELETE" onclick="setFilter('method','DELETE',this)">DELETE</button>
+      <button class="filter-btn active" data-filter="method" data-value="ALL"    onclick="setFilter('method','ALL',this)">ALL</button>
+      <button class="filter-btn"        data-filter="method" data-value="GET"    onclick="setFilter('method','GET',this)">GET</button>
+      <button class="filter-btn"        data-filter="method" data-value="POST"   onclick="setFilter('method','POST',this)">POST</button>
+      <button class="filter-btn"        data-filter="method" data-value="PUT"    onclick="setFilter('method','PUT',this)">PUT</button>
+      <button class="filter-btn"        data-filter="method" data-value="DELETE" onclick="setFilter('method','DELETE',this)">DELETE</button>
     </div>
     <div class="filter-group" id="statusFilters">
       <button class="filter-btn active" data-filter="status" data-value="ALL" onclick="setFilter('status','ALL',this)">Status: ALL</button>
-      <button class="filter-btn" data-filter="status" data-value="2xx" onclick="setFilter('status','2xx',this)">2xx</button>
-      <button class="filter-btn" data-filter="status" data-value="4xx" onclick="setFilter('status','4xx',this)">4xx</button>
-      <button class="filter-btn" data-filter="status" data-value="5xx" onclick="setFilter('status','5xx',this)">5xx</button>
+      <button class="filter-btn"        data-filter="status" data-value="2xx" onclick="setFilter('status','2xx',this)">2xx</button>
+      <button class="filter-btn"        data-filter="status" data-value="4xx" onclick="setFilter('status','4xx',this)">4xx</button>
+      <button class="filter-btn"        data-filter="status" data-value="5xx" onclick="setFilter('status','5xx',this)">5xx</button>
     </div>
     <div class="filter-group">
-      <button class="filter-btn active" data-filter="threat" data-value="ALL" onclick="setFilter('threat','ALL',this)">Threat: ALL</button>
-      <button class="filter-btn danger" data-filter="threat" data-value="critical" onclick="setFilter('threat','critical',this)">🔴 Critical</button>
-      <button class="filter-btn warn" data-filter="threat" data-value="medium" onclick="setFilter('threat','medium',this)">🟡 Medium</button>
+      <button class="filter-btn active" data-filter="threat" data-value="ALL"      onclick="setFilter('threat','ALL',this)">Threat: ALL</button>
+      <button class="filter-btn danger"  data-filter="threat" data-value="critical" onclick="setFilter('threat','critical',this)">🔴 Critical</button>
+      <button class="filter-btn warn"    data-filter="threat" data-value="medium"   onclick="setFilter('threat','medium',this)">🟡 Medium</button>
     </div>
     <div class="search-box">
       <span>🔎</span>
@@ -582,208 +374,137 @@
       <p>Upload file .log untuk mulai analisa</p>
     </div>
   </div>
-</div>
+
+</div><!-- /container -->
 
 <script>
 // ============================================================
-// OWASP TOP 10 PATTERNS
-// Catatan: Deteksi HANYA pada body request (URL, GET params, POST params, Body)
-// Headers TIDAK discan untuk menghindari false positive
+// CONSTANTS
+// ============================================================
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+const MAX_RENDER    = 500;               // render 500 entri sekaligus untuk performa
+
+// ============================================================
+// OWASP PATTERNS (tidak diubah dari versi asli)
 // ============================================================
 const OWASP_PATTERNS = [
-  // SQL Injection — hanya pola eksplisit, bukan simbol umum seperti ; atau */
-  { id: 'A03-SQLi', name: 'SQL Injection', owasp: 'A03:2021', severity: 'critical',
-    desc: 'Upaya injeksi SQL untuk manipulasi database',
-    regex: /(\bUNION\b.{0,20}\bSELECT\b|\bSELECT\b.{0,30}\bFROM\b|\bINSERT\b.{0,20}\bINTO\b|\bDROP\b.{0,10}\bTABLE\b|\bOR\b\s+['"]?\d+['"]?\s*=\s*['"]?\d|\bAND\b\s+['"]?\d+['"]?\s*=\s*['"]?\d|\bSLEEP\s*\(|\bBENCHMARK\s*\(|\bINFORMATION_SCHEMA\b|\bxp_cmdshell\b|'--\s|'\s*OR\s*'1'\s*=\s*'1)/gi
-  },
-  // XSS
-  { id: 'A03-XSS', name: 'Cross-Site Scripting (XSS)', owasp: 'A03:2021', severity: 'critical',
-    desc: 'Upaya injeksi script berbahaya ke halaman web',
-    regex: /(<script[\s>]|<\/script>|javascript\s*:|on(?:error|load|click|mouseover|focus)\s*=|alert\s*\(|document\.cookie|eval\s*\(|String\.fromCharCode|document\.write\s*\()/gi
-  },
-  // Path / Directory Traversal
-  { id: 'A01-LFI', name: 'Path / Directory Traversal', owasp: 'A01:2021', severity: 'critical',
-    desc: 'Upaya akses file di luar direktori yang diizinkan',
-    regex: /(\.\.\/|\.\.\\|%2e%2e[%\/\\]|%252e%252e|\/etc\/passwd|\/etc\/shadow|\/proc\/self|boot\.ini|win\.ini)/gi
-  },
-  // Command Injection — hanya pola spesifik
-  { id: 'A03-CMDi', name: 'Command Injection', owasp: 'A03:2021', severity: 'critical',
-    desc: 'Upaya eksekusi perintah sistem operasi',
-    regex: /(`[^`]+`|;\s*(?:cat|ls|id|whoami|uname|pwd|wget|curl)\s|\/bin\/(?:bash|sh)|cmd\.exe|powershell\.exe\s)/gi
-  },
-  // XXE
-  { id: 'A05-XXE', name: 'XXE Injection', owasp: 'A05:2021', severity: 'critical',
-    desc: 'XML External Entity injection attack',
-    regex: /(<!ENTITY\s|SYSTEM\s+"file:|<!DOCTYPE\s+\w+\s+\[|%xxe;|&xxe;)/gi
-  },
-  // SSRF — hanya jika muncul di nilai parameter, bukan sebagai host request itu sendiri
-  { id: 'A10-SSRF', name: 'Server-Side Request Forgery (SSRF)', owasp: 'A10:2021', severity: 'critical',
-    desc: 'Upaya memaksa server fetch ke resource internal via parameter',
-    regex: /(?:url|path|redirect|src|href|target|dest|uri|endpoint)\s*=\s*(?:https?:\/\/(?:localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|169\.254\.|192\.168\.|10\.\d|172\.(?:1[6-9]|2\d|3[01])\.))|(?:file|dict|gopher|ftp):\/\//gi
-  },
-  // SSTI
-  { id: 'A03-SSTI', name: 'Server-Side Template Injection', owasp: 'A03:2021', severity: 'critical',
-    desc: 'Upaya injeksi template engine',
-    regex: /(\{\{[\s\S]{1,50}\}\}|\{%[\s\S]{1,50}%\}|\$\{[\s\S]{1,50}\}|<%=[\s\S]{1,50}%>)/g
-  },
-  // NoSQL Injection
-  { id: 'A03-NoSQLi', name: 'NoSQL Injection', owasp: 'A03:2021', severity: 'critical',
-    desc: 'Upaya injeksi NoSQL query',
-    regex: /(\$where\s*[:=]|\$gt\s*[:=]|\$lt\s*[:=]|\$ne\s*[:=]|\$regex\s*[:=]|\$or\s*[:\[=]|\$and\s*[:\[=])/gi
-  },
-  // Security Scanner via UA — khusus User-Agent field, bukan header lainnya
-  { id: 'A06-Scanner', name: 'Security Scanner / Recon', owasp: 'A06:2021', severity: 'medium',
-    desc: 'User-Agent menunjukkan tools scanning keamanan',
-    uaOnly: true, // flag khusus: hanya cek UA field
-    regex: /(nikto|sqlmap|masscan|nessus|openvas|acunetix|dirbuster|gobuster|ffuf|nuclei|wfuzz|hydra|medusa|nmap\s)/gi
-  },
-  // Sensitive File Access via URL
-  { id: 'A05-SensFile', name: 'Sensitive File Access', owasp: 'A05:2021', severity: 'medium',
-    desc: 'Upaya akses file konfigurasi / sensitif',
-    urlOnly: true, // flag khusus: hanya cek URL
-    regex: /(\.env$|\.git\/|\.svn\/|\.htaccess|\.htpasswd|web\.config|php\.ini|wp-config\.php|config\.php|database\.php|\.(bak|backup|sql|dump)$|id_rsa|authorized_keys)/gi
-  },
-  // Brute Force Auth — cek URL + POST bersamaan
-  { id: 'A07-BruteForce', name: 'Brute Force / Auth Endpoint', owasp: 'A07:2021', severity: 'medium',
-    desc: 'Request ke endpoint autentikasi dengan parameter credential',
-    combo: true, // flag: cek URL dan POST sekaligus
-    urlRegex: /(\/login|\/signin|\/auth|\/wp-login\.php|\/admin\/login|\/user\/login)/gi,
-    bodyRegex: /(password|passwd|pass|pwd)\s*=/gi
-  },
+  { id:'A03-SQLi',   name:'SQL Injection',                    owasp:'A03:2021', severity:'critical',
+    desc:'Upaya injeksi SQL untuk manipulasi database',
+    regex:/(\bUNION\b.{0,20}\bSELECT\b|\bSELECT\b.{0,30}\bFROM\b|\bINSERT\b.{0,20}\bINTO\b|\bDROP\b.{0,10}\bTABLE\b|\bOR\b\s+['"]?\d+['"]?\s*=\s*['"]?\d|\bAND\b\s+['"]?\d+['"]?\s*=\s*['"]?\d|\bSLEEP\s*\(|\bBENCHMARK\s*\(|\bINFORMATION_SCHEMA\b|\bxp_cmdshell\b|'--\s|'\s*OR\s*'1'\s*=\s*'1)/gi },
+  { id:'A03-XSS',    name:'Cross-Site Scripting (XSS)',        owasp:'A03:2021', severity:'critical',
+    desc:'Upaya injeksi script berbahaya ke halaman web',
+    regex:/(<script[\s>]|<\/script>|javascript\s*:|on(?:error|load|click|mouseover|focus)\s*=|alert\s*\(|document\.cookie|eval\s*\(|String\.fromCharCode|document\.write\s*\()/gi },
+  { id:'A01-LFI',    name:'Path / Directory Traversal',        owasp:'A01:2021', severity:'critical',
+    desc:'Upaya akses file di luar direktori yang diizinkan',
+    regex:/(\.\.\/|\.\.\\|%2e%2e[%\/\\]|%252e%252e|\/etc\/passwd|\/etc\/shadow|\/proc\/self|boot\.ini|win\.ini)/gi },
+  { id:'A03-CMDi',   name:'Command Injection',                  owasp:'A03:2021', severity:'critical',
+    desc:'Upaya eksekusi perintah sistem operasi',
+    regex:/(`[^`]+`|;\s*(?:cat|ls|id|whoami|uname|pwd|wget|curl)\s|\/bin\/(?:bash|sh)|cmd\.exe|powershell\.exe\s)/gi },
+  { id:'A05-XXE',    name:'XXE Injection',                      owasp:'A05:2021', severity:'critical',
+    desc:'XML External Entity injection attack',
+    regex:/(<!ENTITY\s|SYSTEM\s+"file:|<!DOCTYPE\s+\w+\s+\[|%xxe;|&xxe;)/gi },
+  { id:'A10-SSRF',   name:'Server-Side Request Forgery (SSRF)', owasp:'A10:2021', severity:'critical',
+    desc:'Upaya memaksa server fetch ke resource internal via parameter',
+    regex:/(?:url|path|redirect|src|href|target|dest|uri|endpoint)\s*=\s*(?:https?:\/\/(?:localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|169\.254\.|192\.168\.|10\.\d|172\.(?:1[6-9]|2\d|3[01])\.))|(?:file|dict|gopher|ftp):\/\//gi },
+  { id:'A03-SSTI',   name:'Server-Side Template Injection',     owasp:'A03:2021', severity:'critical',
+    desc:'Upaya injeksi template engine',
+    regex:/(\{\{[\s\S]{1,50}\}\}|\{%[\s\S]{1,50}%\}|\$\{[\s\S]{1,50}\}|<%=[\s\S]{1,50}%>)/g },
+  { id:'A03-NoSQLi', name:'NoSQL Injection',                    owasp:'A03:2021', severity:'critical',
+    desc:'Upaya injeksi NoSQL query',
+    regex:/(\$where\s*[:=]|\$gt\s*[:=]|\$lt\s*[:=]|\$ne\s*[:=]|\$regex\s*[:=]|\$or\s*[:\[=]|\$and\s*[:\[=])/gi },
+  { id:'A06-Scanner',  name:'Security Scanner / Recon', owasp:'A06:2021', severity:'medium',
+    desc:'User-Agent menunjukkan tools scanning keamanan',
+    uaOnly: true,
+    regex:/(nikto|sqlmap|masscan|nessus|openvas|acunetix|dirbuster|gobuster|ffuf|nuclei|wfuzz|hydra|medusa|nmap\s)/gi },
+  { id:'A05-SensFile', name:'Sensitive File Access',    owasp:'A05:2021', severity:'medium',
+    desc:'Upaya akses file konfigurasi / sensitif',
+    urlOnly: true,
+    regex:/(\.env$|\.git\/|\.svn\/|\.htaccess|\.htpasswd|web\.config|php\.ini|wp-config\.php|config\.php|database\.php|\.(bak|backup|sql|dump)$|id_rsa|authorized_keys)/gi },
+  { id:'A07-BruteForce', name:'Brute Force / Auth Endpoint', owasp:'A07:2021', severity:'medium',
+    desc:'Request ke endpoint autentikasi dengan parameter credential',
+    combo: true,
+    urlRegex:/(\/login|\/signin|\/auth|\/wp-login\.php|\/admin\/login|\/user\/login)/gi,
+    bodyRegex:/(password|passwd|pass|pwd)\s*=/gi },
 ];
 
 function detectThreats(entry) {
-  // Scope deteksi: HANYA body fields — bukan headers
-  const bodyTarget  = [entry.get, entry.post, entry.body].filter(v => v && v !== '-').join(' ');
-  const urlTarget   = entry.url || '';
-  const uaTarget    = entry.ua || '';
-
+  const bodyTarget = [entry.get, entry.post, entry.body].filter(v => v && v !== '-').join(' ');
+  const urlTarget  = entry.url || '';
+  const uaTarget   = entry.ua  || '';
   const found = [];
-
   for (const p of OWASP_PATTERNS) {
     let matches = null;
-
     if (p.combo) {
-      // Cek URL + body POST bersamaan
-      const urlMatch = urlTarget.match(p.urlRegex);
+      const urlMatch  = urlTarget.match(p.urlRegex);
       const bodyMatch = bodyTarget.match(p.bodyRegex);
-      if (urlMatch && bodyMatch) {
-        matches = [...urlMatch, ...bodyMatch];
-      }
+      if (urlMatch && bodyMatch) matches = [...urlMatch, ...bodyMatch];
     } else if (p.uaOnly) {
-      // Hanya scan User-Agent
       matches = uaTarget.match(p.regex);
     } else if (p.urlOnly) {
-      // Hanya scan URL
       matches = urlTarget.match(p.regex);
     } else {
-      // Scan URL + body (GET/POST/Body) — TIDAK menyertakan headers
-      const scanTarget = [urlTarget, bodyTarget].join(' ');
-      matches = scanTarget.match(p.regex);
+      matches = [urlTarget, bodyTarget].join(' ').match(p.regex);
     }
-
     if (matches && matches.length) {
-      found.push({
-        ...p,
-        matched: [...new Set(matches)].slice(0, 3).join(', ')
-      });
+      found.push({ ...p, matched: [...new Set(matches)].slice(0, 3).join(', ') });
     }
   }
-
   return found;
 }
 
 // ============================================================
-// FORMAT AUTO-DETECT & MULTI-PARSER
-// Mendukung: Custom, Apache Access, Apache Error, Nginx Access, Nginx Error
+// DATE HELPERS
 // ============================================================
-
-// Bulan Apache/Nginx
-const MONTH_MAP = {
-  Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',
-  Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'
-};
-
+const MONTH_MAP = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
 function normalizeApacheDate(d) {
-  // "10/Oct/2024:13:55:36 +0700" → "2024-10-10 13:55:36"
   const m = d.match(/(\d{2})\/(\w{3})\/(\d{4}):(\d{2}:\d{2}:\d{2})/);
-  if (!m) return d;
-  return `${m[3]}-${MONTH_MAP[m[2]]||'??'}-${m[1]} ${m[4]}`;
+  return m ? `${m[3]}-${MONTH_MAP[m[2]]||'??'}-${m[1]} ${m[4]}` : d;
 }
-
-function normalizeNginxErrorDate(d) {
-  // "2024/10/10 13:55:36" → "2024-10-10 13:55:36"
-  return d.replace(/\//g, '-');
-}
-
+function normalizeNginxErrorDate(d)  { return d.replace(/\//g, '-'); }
 function normalizeApacheErrorDate(d) {
-  // Format XAMPP: "Tue Jun 10 06:08:16.944880 2025"
-  // Format standar: "Thu Oct 10 13:55:36.123 2024"
-  // → "2025-06-10 06:08:16"
   const m = d.match(/\w+\s+(\w+)\s+(\d{1,2})\s+([\d:]+)[\.\d]*\s+(\d{4})/);
-  if (!m) return d;
-  const day = m[2].padStart(2, '0');
-  return `${m[4]}-${MONTH_MAP[m[1]] || '??'}-${day} ${m[3]}`;
+  return m ? `${m[4]}-${MONTH_MAP[m[1]]||'??'}-${m[2].padStart(2,'0')} ${m[3]}` : d;
 }
 
-// Deteksi format dari sampel beberapa baris pertama
+// ============================================================
+// FORMAT DETECT & PARSERS
+// ============================================================
 function detectFormat(content) {
-  const sample = content.slice(0, 2000);
-
-  // Custom format (format asli user)
-  if (/^-{10,}/m.test(sample) && /\[\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\]\s+(GET|POST|PUT|DELETE|PATCH|HEAD)/.test(sample))
-    return 'custom';
-
-  // Apache Error Log: [Tue Jun 10 06:08:16.944880 2025] [ssl:warn] [pid 7352:tid 316] ...
-  // Juga menangani format tanpa tid: [pid 7352]
-  if (/^\[\w{3}\s+\w{3}\s+\d{1,2}\s+[\d:.]+\s+\d{4}\]\s+\[\w+:\w+\]/m.test(sample))
-    return 'apache-error';
-
-  // Nginx Error Log: 2024/10/10 13:55:36 [error]
-  if (/^\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2}\s+\[(error|warn|crit|notice|info)\]/m.test(sample))
-    return 'nginx-error';
-
-  // Apache/Nginx Access Log: IP - - [date] "METHOD URL proto" status size
-  if (/^\S+\s+-\s+\S+\s+\[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2}/m.test(sample))
-    return 'access'; // Apache & Nginx access pakai format Combined yang sama
-
+  const s = content.slice(0, 2000);
+  if (/^-{10,}/m.test(s) && /\[\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\]\s+(GET|POST|PUT|DELETE|PATCH|HEAD)/.test(s)) return 'custom';
+  if (/^\[\w{3}\s+\w{3}\s+\d{1,2}\s+[\d:.]+\s+\d{4}\]\s+\[\w+:\w+\]/m.test(s)) return 'apache-error';
+  if (/^\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2}\s+\[(error|warn|crit|notice|info)\]/m.test(s)) return 'nginx-error';
+  if (/^\S+\s+-\s+\S+\s+\[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2}/m.test(s)) return 'access';
   return 'unknown';
 }
 
 function finalizeEntry(entry) {
-  // Ekstrak GET params dari URL jika ada ?query=string
   if (entry.url && entry.url.includes('?') && entry.get === '-') {
-    const qIdx = entry.url.indexOf('?');
-    entry.get = entry.url.slice(qIdx + 1);
-    entry.url = entry.url.slice(0, qIdx);
+    const q = entry.url.indexOf('?');
+    entry.get = entry.url.slice(q + 1);
+    entry.url = entry.url.slice(0, q);
   }
-  entry.threats = detectThreats(entry);
+  entry.threats     = detectThreats(entry);
   entry.threatLevel = entry.threats.some(t => t.severity === 'critical') ? 'critical'
-    : entry.threats.some(t => t.severity === 'medium') ? 'medium'
-    : entry.threats.length > 0 ? 'low' : 'none';
+                    : entry.threats.some(t => t.severity === 'medium')   ? 'medium'
+                    : entry.threats.length > 0 ? 'low' : 'none';
   return entry;
 }
 
-// ── Parser: Custom format (format asli user) ─────────────────
 function parseCustom(content) {
   const entries = [];
-  const blocks = content.split(/^-{10,}/m).filter(b => b.trim());
-
+  const blocks  = content.split(/^-{10,}/m).filter(b => b.trim());
   for (const block of blocks) {
     const lines = block.trim().split('\n');
     if (!lines.length) continue;
     const hm = lines[0].match(/\[(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})\]\s+(\w+)\s+(\S+)\s+\[(\d{3})\]/);
     if (!hm) continue;
-
     const entry = {
-      format: 'Custom', timestamp: hm[1], method: hm[2], url: hm[3],
-      status: parseInt(hm[4]),
+      format:'Custom', timestamp:hm[1], method:hm[2], url:hm[3], status:parseInt(hm[4]),
       ip:'-', host:'-', protocol:'-', script:'-', ua:'-', referer:'-',
       get:'-', post:'-', contentType:'-', contentLength:'-',
-      session:'-', memory:'-', execTime:'-', headers:{}, body:'-',
-      rawMessage: ''
+      session:'-', memory:'-', execTime:'-', headers:{}, body:'-', rawMessage:''
     };
-
     let inHeaders = false;
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
@@ -793,15 +514,15 @@ function parseCustom(content) {
         if (key === 'Headers') { inHeaders = true; continue; }
         if (key === 'Body')    { inHeaders = false; entry.body = val||'-'; continue; }
         if (!inHeaders) {
-          const map = { 'IP':'ip','Host':'host','Protocol':'protocol','Script':'script',
+          const map = {'IP':'ip','Host':'host','Protocol':'protocol','Script':'script',
             'UA':'ua','Referer':'referer','GET':'get','POST':'post','C-Type':'contentType',
-            'C-Length':'contentLength','Session':'session','Memory':'memory','Exec Time':'execTime' };
+            'C-Length':'contentLength','Session':'session','Memory':'memory','Exec Time':'execTime'};
           if (map[key]) entry[map[key]] = val||'-';
         }
       }
       if (inHeaders) {
-        const hMatch = line.match(/^\s{11}(\S[^:]+):\s*(.*)$/);
-        if (hMatch) entry.headers[hMatch[1].trim()] = hMatch[2].trim();
+        const hm2 = line.match(/^\s{11}(\S[^:]+):\s*(.*)$/);
+        if (hm2) entry.headers[hm2[1].trim()] = hm2[2].trim();
       }
     }
     entries.push(finalizeEntry(entry));
@@ -809,132 +530,81 @@ function parseCustom(content) {
   return entries;
 }
 
-// ── Parser: Apache & Nginx Access Log (Combined Format) ──────
-// Format: IP ident user [date] "METHOD URL proto" status size "referer" "UA"
 function parseAccess(content) {
   const entries = [];
-  const lines = content.split('\n');
-
-  for (const line of lines) {
+  for (const line of content.split('\n')) {
     if (!line.trim()) continue;
-    const m = line.match(
-      /^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"(\S+)\s+(\S+)\s+(\S+)"\s+(\d+)\s+(\S+)(?:\s+"([^"]*)"\s+"([^"]*)")?/
-    );
+    const m = line.match(/^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"(\S+)\s+(\S+)\s+(\S+)"\s+(\d+)\s+(\S+)(?:\s+"([^"]*)"\s+"([^"]*)")?/);
     if (!m) continue;
-
-    const method = m[3].toUpperCase();
-    const entry = {
-      format: 'Access Log', timestamp: normalizeApacheDate(m[2]),
-      method, url: m[4], status: parseInt(m[6]),
-      ip: m[1], host: '-', protocol: m[5], script: '-',
-      ua: m[9]||'-', referer: m[8]||'-',
-      get: '-', post: '-', contentType: '-', contentLength: m[7]||'-',
-      session: '-', memory: '-', execTime: '-',
-      headers: {}, body: '-', rawMessage: line.trim()
-    };
-    entries.push(finalizeEntry(entry));
-  }
-  return entries;
-}
-
-// ── Parser: Apache Error Log ──────────────────────────────────
-// Format XAMPP : [Tue Jun 10 06:08:16.944880 2025] [ssl:warn] [pid 7352:tid 316] AH01909: message
-// Format standar: [date] [module:level] [pid N] [client IP:port] message
-function parseApacheError(content) {
-  const entries = [];
-  const lines = content.split('\n');
-
-  for (const line of lines) {
-    if (!line.trim()) continue;
-
-    // Regex fleksibel: pid bisa "7352" atau "7352:tid 316"
-    const m = line.match(
-      /^\[([^\]]+)\]\s+\[([^\]]+)\]\s+\[pid\s+[\d:a-z\s]+\](?:\s+\[client\s+([^\]]+)\])?\s+(.*)/i
-    );
-    if (!m) continue;
-
-    const module    = m[2];          // e.g. "ssl:warn", "php:error", "mpm_winnt:notice"
-    const message   = (m[4] || '').trim();
-    const clientRaw = m[3] || '-';
-    const ip        = clientRaw.replace(/:\d+$/, ''); // hapus port
-
-    // Ekstrak file PHP dari pesan error jika ada
-    const fileM = message.match(/in\s+((?:[A-Za-z]:[\/\\]|\/)[^\s(]+\.php)/i) ||
-                  message.match(/opening required\s+'([^']+)'/i);
-    const urlDisplay = fileM ? fileM[1] : '-';
-
     entries.push(finalizeEntry({
-      format: 'Apache Error',
-      timestamp: normalizeApacheErrorDate(m[1]),
-      method: '-',
-      url: urlDisplay,
-      status: 0,
-      ip,
-      host: '-', protocol: '-', script: urlDisplay,
-      ua: '-', referer: '-', get: '-', post: '-',
-      contentType: '-', contentLength: '-',
-      session: '-', memory: '-', execTime: '-',
-      headers: {}, body: '-',
-      errorLevel: module,
-      rawMessage: message
+      format:'Access Log', timestamp:normalizeApacheDate(m[2]),
+      method:m[3].toUpperCase(), url:m[4], status:parseInt(m[6]),
+      ip:m[1], host:'-', protocol:m[5], script:'-',
+      ua:m[9]||'-', referer:m[8]||'-',
+      get:'-', post:'-', contentType:'-', contentLength:m[7]||'-',
+      session:'-', memory:'-', execTime:'-', headers:{}, body:'-', rawMessage:line.trim()
     }));
   }
   return entries;
 }
 
-// ── Parser: Nginx Error Log ───────────────────────────────────
-// Format: 2024/10/10 13:55:36 [level] PID#TID: *CID message
+function parseApacheError(content) {
+  const entries = [];
+  for (const line of content.split('\n')) {
+    if (!line.trim()) continue;
+    const m = line.match(/^\[([^\]]+)\]\s+\[([^\]]+)\]\s+\[pid\s+[\d:a-z\s]+\](?:\s+\[client\s+([^\]]+)\])?\s+(.*)/i);
+    if (!m) continue;
+    const message = (m[4]||'').trim();
+    const ip = (m[3]||'-').replace(/:\d+$/, '');
+    const fileM = message.match(/in\s+((?:[A-Za-z]:[\/\\]|\/)[^\s(]+\.php)/i) || message.match(/opening required\s+'([^']+)'/i);
+    const urlDisplay = fileM ? fileM[1] : '-';
+    entries.push(finalizeEntry({
+      format:'Apache Error', timestamp:normalizeApacheErrorDate(m[1]),
+      method:'-', url:urlDisplay, status:0,
+      ip, host:'-', protocol:'-', script:urlDisplay, ua:'-', referer:'-',
+      get:'-', post:'-', contentType:'-', contentLength:'-',
+      session:'-', memory:'-', execTime:'-', headers:{}, body:'-',
+      errorLevel:m[2], rawMessage:message
+    }));
+  }
+  return entries;
+}
+
 function parseNginxError(content) {
   const entries = [];
-  const lines = content.split('\n');
-
-  for (const line of lines) {
+  for (const line of content.split('\n')) {
     if (!line.trim()) continue;
-    const m = line.match(
-      /^(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})\s+\[(\w+)\]\s+\d+#\d+:\s+(?:\*\d+\s+)?(.*)/
-    );
+    const m = line.match(/^(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})\s+\[(\w+)\]\s+\d+#\d+:\s+(?:\*\d+\s+)?(.*)/);
     if (!m) continue;
-
     const message = m[3]||'';
-    const ipM = message.match(/(?:client:\s*)(\d+\.\d+\.\d+\.\d+)/);
+    const ipM  = message.match(/(?:client:\s*)(\d+\.\d+\.\d+\.\d+)/);
     const urlM = message.match(/(?:request:\s*"(?:GET|POST|PUT|DELETE|PATCH|HEAD)\s+)(\S+)/i);
     const refM = message.match(/(?:referrer:\s*")([^"]+)/);
     const uaM  = message.match(/(?:host:\s*")([^"]+)/);
-
     entries.push(finalizeEntry({
-      format: 'Nginx Error', timestamp: normalizeNginxErrorDate(m[1]),
-      method: '-', url: urlM ? urlM[1] : '-',
-      status: 0,
-      ip: ipM ? ipM[1] : '-', host: uaM ? uaM[1] : '-',
-      protocol: '-', script: '-', ua: '-',
-      referer: refM ? refM[1] : '-',
-      get: '-', post: '-', contentType: '-', contentLength: '-',
-      session: '-', memory: '-', execTime: '-',
-      headers: {}, body: '-',
-      errorLevel: m[2], rawMessage: message.trim()
+      format:'Nginx Error', timestamp:normalizeNginxErrorDate(m[1]),
+      method:'-', url:urlM ? urlM[1] : '-', status:0,
+      ip:ipM ? ipM[1] : '-', host:uaM ? uaM[1] : '-',
+      protocol:'-', script:'-', ua:'-', referer:refM ? refM[1] : '-',
+      get:'-', post:'-', contentType:'-', contentLength:'-',
+      session:'-', memory:'-', execTime:'-', headers:{}, body:'-',
+      errorLevel:m[2], rawMessage:message.trim()
     }));
   }
   return entries;
 }
 
-// ── Master parser: auto-detect format ────────────────────────
 function parseLog(content) {
   const fmt = detectFormat(content);
   let entries = [];
-
   if      (fmt === 'custom')       entries = parseCustom(content);
   else if (fmt === 'access')       entries = parseAccess(content);
   else if (fmt === 'apache-error') entries = parseApacheError(content);
   else if (fmt === 'nginx-error')  entries = parseNginxError(content);
   else {
-    // unknown — coba semua parser, ambil yang paling banyak hasilnya
-    const results = [
-      parseCustom(content), parseAccess(content),
-      parseApacheError(content), parseNginxError(content)
-    ];
+    const results = [parseCustom(content), parseAccess(content), parseApacheError(content), parseNginxError(content)];
     entries = results.reduce((a, b) => b.length > a.length ? b : a, []);
   }
-
   return { entries, format: fmt };
 }
 
@@ -945,19 +615,138 @@ let allLogs = [];
 let detectedFormat = 'unknown';
 let filters = { method: 'ALL', status: 'ALL', threat: 'ALL' };
 
-function setFilter(type, value, btn) {
-  filters[type] = value;
-  document.querySelectorAll(`[data-filter="${type}"]`).forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderLogs();
+// ============================================================
+// FIX 1: UPLOAD BUTTON — triggerUpload() + proper event binding
+// ============================================================
+function triggerUpload() {
+  document.getElementById('fileInput').click();
 }
 
-function getStatusClass(code) {
-  if (code >= 200 && code < 300) return 'status-2xx';
-  if (code >= 300 && code < 400) return 'status-3xx';
-  if (code >= 400 && code < 500) return 'status-4xx';
-  if (code >= 500) return 'status-5xx';
-  return '';
+// Click on the zone (but not the button itself) also triggers upload
+document.getElementById('uploadZone').addEventListener('click', function(e) {
+  // Prevent double-trigger if the button inside was clicked
+  if (e.target.closest('.btn')) return;
+  triggerUpload();
+});
+
+// Drag & drop
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+// File input change
+document.getElementById('fileInput').addEventListener('change', function() {
+  if (this.files[0]) handleFile(this.files[0]);
+  this.value = ''; // reset so same file can be re-uploaded
+});
+
+// ============================================================
+// FIX 2: FILE HANDLING — 100MB limit + chunked FileReader
+// ============================================================
+function showError(msg) {
+  const el = document.getElementById('errorToast');
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024)           return bytes + ' B';
+  if (bytes < 1024*1024)      return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function handleFile(file) {
+  // Validate file size
+  if (file.size > MAX_FILE_SIZE) {
+    showError(`File terlalu besar: ${formatSize(file.size)}. Maksimal 100 MB. Gunakan perintah 'split' atau 'head' untuk memotong file log.`);
+    return;
+  }
+
+  // Validate extension
+  if (!file.name.match(/\.(log|txt)$/i)) {
+    showError('Format file tidak didukung. Gunakan file .log atau .txt');
+    return;
+  }
+
+  // Show progress for files > 5MB
+  const progressWrap = document.getElementById('progressWrap');
+  const progressFill = document.getElementById('progressFill');
+  const progressLabel = document.getElementById('progressLabel');
+  const showProgress = file.size > 5 * 1024 * 1024;
+
+  if (showProgress) {
+    progressWrap.style.display = 'block';
+    progressFill.style.width   = '0%';
+    progressLabel.textContent  = `Memuat file ${formatSize(file.size)}... 0%`;
+  }
+
+  const reader = new FileReader();
+
+  reader.onprogress = function(e) {
+    if (e.lengthComputable && showProgress) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      progressFill.style.width  = pct + '%';
+      progressLabel.textContent = `Memuat file ${formatSize(file.size)}... ${pct}%`;
+    }
+  };
+
+  reader.onload = function(e) {
+    if (showProgress) {
+      progressFill.style.width  = '100%';
+      progressLabel.textContent = 'Parsing log...';
+    }
+
+    // Use setTimeout to let the UI update before heavy parsing
+    setTimeout(() => {
+      try {
+        const content = e.target.result;
+        const { entries, format } = parseLog(content);
+
+        if (entries.length === 0) {
+          showError('Tidak ada entri yang berhasil di-parse. Pastikan format log sesuai.');
+          progressWrap.style.display = 'none';
+          return;
+        }
+
+        allLogs         = entries;
+        detectedFormat  = format;
+        progressWrap.style.display = 'none';
+        updateUI();
+      } catch (err) {
+        showError('Gagal memproses file: ' + err.message);
+        progressWrap.style.display = 'none';
+      }
+    }, 50);
+  };
+
+  reader.onerror = function() {
+    showError('Gagal membaca file. Pastikan file tidak rusak atau sedang digunakan program lain.');
+    progressWrap.style.display = 'none';
+  };
+
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+const FORMAT_LABEL = {
+  'custom':       { label: 'Custom Format',              color: 'var(--accent)' },
+  'access':       { label: 'Apache / Nginx Access Log',  color: 'var(--accent2)' },
+  'apache-error': { label: 'Apache Error Log',           color: 'var(--warn)' },
+  'nginx-error':  { label: 'Nginx Error Log',            color: '#a29bfe' },
+  'unknown':      { label: 'Format Tidak Dikenal',       color: 'var(--muted2)' },
+};
+
+function isErrorLog() {
+  return detectedFormat === 'apache-error' || detectedFormat === 'nginx-error';
 }
 
 function getStatusGroup(code) {
@@ -967,258 +756,222 @@ function getStatusGroup(code) {
   if (code >= 500) return '5xx';
   return 'other';
 }
+function getStatusClass(code) {
+  if (code >= 200 && code < 300) return 'status-2xx';
+  if (code >= 300 && code < 400) return 'status-3xx';
+  if (code >= 400 && code < 500) return 'status-4xx';
+  if (code >= 500) return 'status-5xx';
+  return '';
+}
 
-const FORMAT_LABEL = {
-  'custom':       { label: 'Custom Format', color: 'var(--accent)' },
-  'access':       { label: 'Apache / Nginx Access Log', color: 'var(--accent2)' },
-  'apache-error': { label: 'Apache Error Log', color: 'var(--warn)' },
-  'nginx-error':  { label: 'Nginx Error Log', color: '#a29bfe' },
-  'unknown':      { label: 'Format Tidak Dikenal', color: 'var(--muted2)' },
-};
+function setFilter(type, value, btn) {
+  filters[type] = value;
+  document.querySelectorAll(`[data-filter="${type}"]`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLogs();
+}
 
-function isErrorLog() {
-  return detectedFormat === 'apache-error' || detectedFormat === 'nginx-error';
+function updateUI() {
+  // Format badge
+  const fmtEl = document.getElementById('detectedFormatBadge');
+  const fmtInfo = FORMAT_LABEL[detectedFormat] || FORMAT_LABEL['unknown'];
+  fmtEl.textContent = fmtInfo.label;
+  fmtEl.style.color       = fmtInfo.color;
+  fmtEl.style.background  = fmtInfo.color + '18';
+  fmtEl.style.borderColor = fmtInfo.color + '44';
+  fmtEl.style.display     = 'inline-block';
+
+  // Stats
+  const total   = allLogs.length;
+  const threats = allLogs.filter(e => e.threatLevel !== 'none').length;
+
+  if (isErrorLog()) {
+    document.getElementById('statGetLabel').textContent  = 'Error/Crit';
+    document.getElementById('statPostLabel').textContent = 'Warn/Notice';
+    document.getElementById('stat2xxLabel').textContent  = 'Info/Debug';
+    document.getElementById('stat4xxLabel').textContent  = 'Total Lines';
+    document.getElementById('statGet').textContent  = allLogs.filter(e => ['error','crit','alert','emerg'].includes((e.errorLevel||'').toLowerCase())).length;
+    document.getElementById('statPost').textContent = allLogs.filter(e => ['warn','notice'].includes((e.errorLevel||'').toLowerCase())).length;
+    document.getElementById('stat2xx').textContent  = allLogs.filter(e => ['info','debug'].includes((e.errorLevel||'').toLowerCase())).length;
+    document.getElementById('stat4xx').textContent  = total;
+
+    // Adapt method filters for error logs
+    document.getElementById('methodFilters').style.display = 'none';
+    const sf = document.getElementById('statusFilters');
+    sf.innerHTML = `
+      <button class="filter-btn active" data-filter="status" data-value="ALL"   onclick="setFilter('status','ALL',this)">Level: ALL</button>
+      <button class="filter-btn danger"  data-filter="status" data-value="error" onclick="setFilter('status','error',this)">Error/Crit</button>
+      <button class="filter-btn warn"    data-filter="status" data-value="warn"  onclick="setFilter('status','warn',this)">Warn/Notice</button>
+      <button class="filter-btn"        data-filter="status" data-value="info"  onclick="setFilter('status','info',this)">Info/Debug</button>`;
+  } else {
+    document.getElementById('statGetLabel').textContent  = 'GET';
+    document.getElementById('statPostLabel').textContent = 'POST';
+    document.getElementById('stat2xxLabel').textContent  = 'Status 2xx';
+    document.getElementById('stat4xxLabel').textContent  = 'Status 4xx/5xx';
+    document.getElementById('statGet').textContent  = allLogs.filter(e => e.method === 'GET').length;
+    document.getElementById('statPost').textContent = allLogs.filter(e => e.method === 'POST').length;
+    document.getElementById('stat2xx').textContent  = allLogs.filter(e => e.status >= 200 && e.status < 300).length;
+    document.getElementById('stat4xx').textContent  = allLogs.filter(e => e.status >= 400).length;
+    document.getElementById('methodFilters').style.display = '';
+  }
+
+  document.getElementById('statTotal').textContent   = total.toLocaleString();
+  document.getElementById('statThreats').textContent = threats.toLocaleString();
+  document.getElementById('statsBar').style.display  = 'grid';
+  document.getElementById('filtersBar').style.display = 'flex';
+
+  renderLogs();
 }
 
 function renderLogs() {
   const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
-
   const filtered = allLogs.filter(e => {
     if (filters.method !== 'ALL' && e.method !== filters.method) return false;
     if (filters.status !== 'ALL') {
       if (isErrorLog()) {
-        // Error log: filter berdasarkan errorLevel
-        if (filters.status === 'error'  && !['error','crit','alert','emerg'].includes((e.errorLevel||'').toLowerCase())) return false;
-        if (filters.status === 'warn'   && !['warn','notice'].includes((e.errorLevel||'').toLowerCase())) return false;
-        if (filters.status === 'info'   && !['info','debug'].includes((e.errorLevel||'').toLowerCase())) return false;
+        const lv = (e.errorLevel||'').toLowerCase();
+        if (filters.status === 'error' && !['error','crit','alert','emerg'].includes(lv)) return false;
+        if (filters.status === 'warn'  && !['warn','notice'].includes(lv)) return false;
+        if (filters.status === 'info'  && !['info','debug'].includes(lv)) return false;
       } else {
         if (getStatusGroup(e.status) !== filters.status) return false;
       }
     }
     if (filters.threat !== 'ALL') {
       if (filters.threat === 'critical' && e.threatLevel !== 'critical') return false;
-      if (filters.threat === 'medium' && !['critical','medium'].includes(e.threatLevel)) return false;
+      if (filters.threat === 'medium'   && !['critical','medium'].includes(e.threatLevel)) return false;
     }
     if (search) {
-      const haystack = [e.url, e.ip, e.ua, e.method, e.get, e.post, e.rawMessage||''].join(' ').toLowerCase();
+      const haystack = [e.url, e.ip, e.ua, e.get, e.post, e.body, e.rawMessage].join(' ').toLowerCase();
       if (!haystack.includes(search)) return false;
     }
     return true;
   });
 
-  document.getElementById('resultInfo').style.display = 'block';
-  document.getElementById('resultInfo').innerHTML =
-    `Menampilkan <span>${filtered.length}</span> dari <span>${allLogs.length}</span> entri`;
-
   const container = document.getElementById('logContainer');
-  if (!filtered.length) {
+  const resultInfo = document.getElementById('resultInfo');
+  resultInfo.style.display = 'block';
+
+  const displayed = filtered.slice(0, MAX_RENDER);
+  resultInfo.innerHTML = `Menampilkan <span>${displayed.length.toLocaleString()}</span> dari <span>${filtered.length.toLocaleString()}</span> entri` +
+    (filtered.length > MAX_RENDER ? ` <span style="color:var(--warn)">(render dibatasi ${MAX_RENDER} entri untuk performa)</span>` : '');
+
+  if (displayed.length === 0) {
     container.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>Tidak ada entri yang cocok dengan filter</p></div>`;
     return;
   }
 
-  container.innerHTML = filtered.map((e, i) => {
-    const threatClass = e.threatLevel !== 'none' ? `threat-${e.threatLevel}` : '';
-    const tags = e.threats.map(t =>
-      `<span class="threat-tag threat-${t.severity}-tag">${t.owasp}</span>`
+  const frag = document.createDocumentFragment();
+  displayed.forEach((e, idx) => {
+    const div = document.createElement('div');
+    div.className = `log-entry${e.threatLevel !== 'none' ? ` threat-${e.threatLevel}` : ''}`;
+
+    const threatTagsHtml = e.threats.map(t =>
+      `<span class="threat-tag threat-${t.severity}-tag">${t.name}</span>`
     ).join('');
 
-    // Badge method — untuk error log tampilkan errorLevel
-    const methodBadge = e.method !== '-'
-      ? `<span class="method-badge method-${e.method}">${e.method}</span>`
-      : `<span class="method-badge" style="background:rgba(255,165,2,0.15);color:var(--warn)">${(e.errorLevel||'ERROR').toUpperCase()}</span>`;
-
-    // Badge status — error log tidak punya status HTTP
-    const statusBadge = e.status > 0
-      ? `<span class="status-badge ${getStatusClass(e.status)}">${e.status}</span>`
-      : '';
-
-    const urlDisplay = e.url !== '-' ? escHtml(e.url) : `<span style="color:var(--muted2);font-size:11px">${escHtml((e.rawMessage||'').slice(0,80))}${(e.rawMessage||'').length > 80 ? '…' : ''}</span>`;
-
-    const headersHtml = Object.entries(e.headers).map(([k,v]) =>
-      `<div><span class="header-key">${escHtml(k)}</span>: <span class="header-val">${escHtml(v)}</span></div>`
-    ).join('');
-
-    const threatDetailHtml = e.threats.length ? `
-      <div class="threat-detail">
-        <h4>⚠️ ANCAMAN TERDETEKSI (${e.threats.length})</h4>
-        ${e.threats.map(t => `
-          <div class="threat-item">
-            <div class="threat-name">[${t.owasp}] ${t.name}</div>
-            <div class="threat-desc">${t.desc}</div>
-            <div class="threat-matched">Match: ${escHtml(t.matched)}</div>
-          </div>
-        `).join('')}
-      </div>` : '';
-
-    // Panel raw message khusus error log
-    const rawMessageHtml = e.rawMessage && e.rawMessage !== '-' ? `
-      <div class="detail-section" style="margin-top:14px">
-        <h4>📋 Raw Message</h4>
-        <div class="headers-block" style="color:var(--warn)">${escHtml(e.rawMessage)}</div>
-      </div>` : '';
-
-    // Blok performa hanya tampil untuk custom format
-    const perfHtml = e.format === 'Custom' ? `
-      <div class="detail-section">
-        <h4>⚙️ Performance</h4>
-        <div class="detail-rows">
-          <div class="detail-row"><span class="detail-key">Memory</span><span class="detail-val highlight">${escHtml(e.memory)}</span></div>
-          <div class="detail-row"><span class="detail-key">Exec Time</span><span class="detail-val highlight">${escHtml(e.execTime)}</span></div>
-          <div class="detail-row"><span class="detail-key">Session</span><span class="detail-val">${escHtml(e.session)}</span></div>
-        </div>
-      </div>` : '';
-
-    return `
-    <div class="log-entry ${threatClass}" id="entry-${i}">
-      <div class="log-header" onclick="toggleEntry(${i})">
-        ${methodBadge}
-        ${statusBadge}
-        <span class="log-url">${urlDisplay}</span>
-        <div class="threat-tags">${tags}</div>
-        <span class="log-ip">${escHtml(e.ip)}</span>
-        <span class="log-time">${escHtml(e.timestamp)}</span>
-        <span class="expand-icon">▼</span>
-      </div>
-      <div class="log-detail">
-        <div class="detail-grid">
-          <div class="detail-section">
-            <h4>📌 Request Info</h4>
-            <div class="detail-rows">
-              <div class="detail-row"><span class="detail-key">Format</span><span class="detail-val highlight">${escHtml(e.format)}</span></div>
-              <div class="detail-row"><span class="detail-key">Timestamp</span><span class="detail-val">${escHtml(e.timestamp)}</span></div>
-              <div class="detail-row"><span class="detail-key">IP</span><span class="detail-val">${escHtml(e.ip)}</span></div>
-              <div class="detail-row"><span class="detail-key">Host</span><span class="detail-val">${escHtml(e.host)}</span></div>
-              <div class="detail-row"><span class="detail-key">Protocol</span><span class="detail-val">${escHtml(e.protocol)}</span></div>
-              <div class="detail-row"><span class="detail-key">Script</span><span class="detail-val">${escHtml(e.script)}</span></div>
-              <div class="detail-row"><span class="detail-key">Referer</span><span class="detail-val">${escHtml(e.referer)}</span></div>
-              ${e.errorLevel ? `<div class="detail-row"><span class="detail-key">Level</span><span class="detail-val" style="color:var(--warn)">${escHtml(e.errorLevel)}</span></div>` : ''}
-            </div>
-          </div>
-          <div class="detail-section">
-            <h4>📦 Payload</h4>
-            <div class="detail-rows">
-              <div class="detail-row"><span class="detail-key">GET Params</span><span class="detail-val">${escHtml(e.get)}</span></div>
-              <div class="detail-row"><span class="detail-key">POST Params</span><span class="detail-val">${escHtml(e.post)}</span></div>
-              <div class="detail-row"><span class="detail-key">Body</span><span class="detail-val">${escHtml(e.body)}</span></div>
-              <div class="detail-row"><span class="detail-key">C-Type</span><span class="detail-val">${escHtml(e.contentType)}</span></div>
-              <div class="detail-row"><span class="detail-key">C-Length</span><span class="detail-val">${escHtml(e.contentLength)}</span></div>
-              <div class="detail-row"><span class="detail-key">UA</span><span class="detail-val">${escHtml(e.ua)}</span></div>
-            </div>
-          </div>
-          ${perfHtml}
-        </div>
-        ${Object.keys(e.headers).length ? `
-        <div class="detail-section" style="margin-top:14px">
-          <h4>🌐 Headers (${Object.keys(e.headers).length})</h4>
-          <div class="headers-block">${headersHtml}</div>
-        </div>` : ''}
-        ${rawMessageHtml}
-        ${threatDetailHtml}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleEntry(i) {
-  document.getElementById(`entry-${i}`)?.classList.toggle('expanded');
-}
-
-function escHtml(str) {
-  return String(str || '-').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function updateStats() {
-  const fmt = FORMAT_LABEL[detectedFormat] || FORMAT_LABEL['unknown'];
-
-  // Tampilkan badge format yang terdeteksi
-  document.getElementById('detectedFormatBadge').style.display = 'inline-flex';
-  document.getElementById('detectedFormatBadge').textContent = '📄 ' + fmt.label;
-  document.getElementById('detectedFormatBadge').style.color = fmt.color;
-  document.getElementById('detectedFormatBadge').style.borderColor = fmt.color;
-  document.getElementById('detectedFormatBadge').style.background = fmt.color + '18';
-
-  document.getElementById('statTotal').textContent = allLogs.length;
-
-  if (isErrorLog()) {
-    // Error log: tampilkan breakdown level, sembunyikan method stats
-    document.getElementById('statGet').textContent = allLogs.filter(e => ['error','crit','alert','emerg'].includes((e.errorLevel||'').toLowerCase())).length;
-    document.getElementById('statGetLabel').textContent = 'Error/Crit';
-    document.getElementById('statPost').textContent = allLogs.filter(e => ['warn','notice'].includes((e.errorLevel||'').toLowerCase())).length;
-    document.getElementById('statPostLabel').textContent = 'Warn/Notice';
-    document.getElementById('stat2xx').textContent = allLogs.filter(e => ['info','debug'].includes((e.errorLevel||'').toLowerCase())).length;
-    document.getElementById('stat2xxLabel').textContent = 'Info/Debug';
-    document.getElementById('stat4xx').textContent = '-';
-    document.getElementById('stat4xxLabel').textContent = 'N/A';
-    // Update filter status buttons untuk error log
-    document.getElementById('statusFilters').innerHTML = `
-      <button class="filter-btn active" data-filter="status" data-value="ALL" onclick="setFilter('status','ALL',this)">ALL</button>
-      <button class="filter-btn danger" data-filter="status" data-value="error" onclick="setFilter('status','error',this)">Error/Crit</button>
-      <button class="filter-btn warn" data-filter="status" data-value="warn" onclick="setFilter('status','warn',this)">Warn</button>
-      <button class="filter-btn" data-filter="status" data-value="info" onclick="setFilter('status','info',this)">Info</button>`;
-    // Sembunyikan filter method yang tidak relevan
-    document.getElementById('methodFilters').style.display = 'none';
-  } else {
-    document.getElementById('statGetLabel').textContent = 'GET';
-    document.getElementById('statPostLabel').textContent = 'POST';
-    document.getElementById('stat2xxLabel').textContent = 'Status 2xx';
-    document.getElementById('stat4xxLabel').textContent = 'Status 4xx/5xx';
-    document.getElementById('statGet').textContent = allLogs.filter(e => e.method === 'GET').length;
-    document.getElementById('statPost').textContent = allLogs.filter(e => e.method === 'POST').length;
-    document.getElementById('stat2xx').textContent = allLogs.filter(e => e.status >= 200 && e.status < 300).length;
-    document.getElementById('stat4xx').textContent = allLogs.filter(e => e.status >= 400).length;
-    document.getElementById('statusFilters').innerHTML = `
-      <button class="filter-btn active" data-filter="status" data-value="ALL" onclick="setFilter('status','ALL',this)">Status: ALL</button>
-      <button class="filter-btn" data-filter="status" data-value="2xx" onclick="setFilter('status','2xx',this)">2xx</button>
-      <button class="filter-btn" data-filter="status" data-value="4xx" onclick="setFilter('status','4xx',this)">4xx</button>
-      <button class="filter-btn" data-filter="status" data-value="5xx" onclick="setFilter('status','5xx',this)">5xx</button>`;
-    document.getElementById('methodFilters').style.display = 'flex';
-  }
-
-  document.getElementById('statThreats').textContent = allLogs.filter(e => e.threatLevel !== 'none').length;
-}
-
-function processFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const result = parseLog(e.target.result);
-    allLogs = result.entries;
-    detectedFormat = result.format;
-    filters = { method: 'ALL', status: 'ALL', threat: 'ALL' };
-
-    document.getElementById('statsBar').style.display = 'grid';
-    document.getElementById('filtersBar').style.display = 'flex';
-    document.getElementById('uploadZone').style.display = 'none';
-    document.getElementById('resultInfo').style.display = 'block';
-
-    if (allLogs.length === 0) {
-      document.getElementById('logContainer').innerHTML = `
-        <div class="empty-state">
-          <div class="icon">⚠️</div>
-          <p>Format log tidak dikenali atau file kosong.<br>Pastikan file adalah Apache/Nginx access log, error log, atau custom format.</p>
-        </div>`;
-      return;
+    let headerContent = '';
+    if (isErrorLog()) {
+      const lvColor = ['error','crit','alert','emerg'].includes((e.errorLevel||'').toLowerCase()) ? 'status-5xx' :
+                      ['warn','notice'].includes((e.errorLevel||'').toLowerCase()) ? 'status-4xx' : 'status-2xx';
+      headerContent = `
+        <span class="status-badge ${lvColor}">${(e.errorLevel||'-').toUpperCase()}</span>
+        <span class="log-url">${esc(e.rawMessage.slice(0, 120)) || esc(e.url)}</span>
+        <span class="log-ip">${esc(e.ip)}</span>
+        <span class="log-time">${esc(e.timestamp)}</span>`;
+    } else {
+      headerContent = `
+        <span class="method-badge method-${e.method}">${esc(e.method)}</span>
+        <span class="status-badge ${getStatusClass(e.status)}">${e.status || '-'}</span>
+        <span class="log-url">${esc(e.url)}</span>
+        <div class="threat-tags">${threatTagsHtml}</div>
+        <span class="log-ip">${esc(e.ip)}</span>
+        <span class="log-time">${esc(e.timestamp)}</span>`;
     }
 
-    updateStats();
-    renderLogs();
-  };
-  reader.readAsText(file);
+    let detailHtml = `<div class="detail-grid">`;
+
+    detailHtml += `<div class="detail-section"><h4>Request Info</h4><div class="detail-rows">`;
+    if (!isErrorLog()) {
+      detailHtml += row('Method',   e.method);
+      detailHtml += row('URL',      e.url, true);
+      detailHtml += row('Protocol', e.protocol);
+      detailHtml += row('Status',   e.status || '-');
+    }
+    detailHtml += row('IP',        e.ip);
+    detailHtml += row('Host',      e.host);
+    detailHtml += row('Timestamp', e.timestamp);
+    if (e.errorLevel) detailHtml += row('Level', e.errorLevel);
+    detailHtml += `</div></div>`;
+
+    if (!isErrorLog()) {
+      detailHtml += `<div class="detail-section"><h4>Payload</h4><div class="detail-rows">`;
+      detailHtml += row('GET',      e.get,  true);
+      detailHtml += row('POST',     e.post, true);
+      detailHtml += row('Body',     e.body !== '-' ? e.body.slice(0, 200) : '-', true);
+      detailHtml += row('C-Type',   e.contentType);
+      detailHtml += row('C-Length', e.contentLength);
+      detailHtml += `</div></div>`;
+
+      if (e.format === 'Custom') {
+        detailHtml += `<div class="detail-section"><h4>Meta</h4><div class="detail-rows">`;
+        detailHtml += row('UA',       e.ua);
+        detailHtml += row('Referer',  e.referer);
+        detailHtml += row('Session',  e.session);
+        detailHtml += row('Memory',   e.memory);
+        detailHtml += row('Exec',     e.execTime);
+        detailHtml += `</div></div>`;
+      }
+    }
+
+    if (e.rawMessage && isErrorLog()) {
+      detailHtml += `<div class="detail-section" style="grid-column:1/-1"><h4>Raw Message</h4>`;
+      detailHtml += `<div class="headers-block">${esc(e.rawMessage)}</div></div>`;
+    }
+
+    if (e.format === 'Custom' && Object.keys(e.headers).length > 0) {
+      const hdrs = Object.entries(e.headers).map(([k,v]) =>
+        `<span class="header-key">${esc(k)}</span>: <span class="header-val">${esc(v)}</span>\n`).join('');
+      detailHtml += `<div class="detail-section" style="grid-column:1/-1"><h4>Headers</h4><div class="headers-block">${hdrs}</div></div>`;
+    }
+
+    detailHtml += `</div>`;
+
+    if (e.threats.length > 0) {
+      detailHtml += `<div class="threat-detail"><h4>🚨 Ancaman Terdeteksi (${e.threats.length})</h4>`;
+      e.threats.forEach(t => {
+        detailHtml += `<div class="threat-item">
+          <span class="threat-name">${esc(t.name)} <span style="color:var(--muted2);font-weight:400">[${esc(t.owasp)}]</span></span>
+          <span class="threat-desc">${esc(t.desc)}</span>
+          <span class="threat-matched">Matched: ${esc(t.matched)}</span>
+        </div>`;
+      });
+      detailHtml += `</div>`;
+    }
+
+    div.innerHTML = `
+      <div class="log-header" onclick="this.parentElement.classList.toggle('expanded')">
+        ${headerContent}
+        <span class="expand-icon">▼</span>
+      </div>
+      <div class="log-detail">${detailHtml}</div>`;
+
+    frag.appendChild(div);
+  });
+
+  container.innerHTML = '';
+  container.appendChild(frag);
 }
 
-// File input
-document.getElementById('fileInput').addEventListener('change', e => {
-  if (e.target.files[0]) processFile(e.target.files[0]);
-});
+function row(key, val, highlight) {
+  if (!val || val === '-') return '';
+  return `<div class="detail-row"><span class="detail-key">${esc(key)}</span><span class="detail-val${highlight ? ' highlight' : ''}">${esc(String(val))}</span></div>`;
+}
 
-// Drag & drop
-const zone = document.getElementById('uploadZone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-zone.addEventListener('drop', e => {
-  e.preventDefault();
-  zone.classList.remove('dragover');
-  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
-});
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>
